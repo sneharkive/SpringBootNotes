@@ -1,0 +1,18 @@
+# Lecture - 35
+# Security Architecture
+
+
+### What is Authentication? (Indentification Verification)
+**Authentication** is the process of verifying **who you are**.
+
+It ensures that the user is **legitimate** before granting access.
+
+
+
+### What is Authorization? (Access Control)
+**Authorization** determines **what you can do** after authentication.
+
+It ensures **users only access what they are allowed to.**
+
+
+

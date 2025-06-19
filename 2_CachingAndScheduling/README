@@ -1,0 +1,330 @@
+# Caching And Security
+
+#                                             Lecture - 30
+#                                                Caching 
+### Why use Caching ?
+- Reduce Latency : Faster access to data compared to fetching from a database or an external service.
+- Decrease Load : Reduces the number of calls to the backend system or database.
+- Improve Scalability : Helps applications handle higher traffic loads efficiently.
+### Note : 
+ **Default Cache (Simple In-Memory)**
+
+  Spring Boot uses **ConcurrentHashMap** as the default cache provider.No extra config needed.
+
+
+
+
+
+| Annotation | Purpose |
+| ----- | ----- |
+| @Cacheable | Caches method result |
+| @CacheEvict | Removes entry from cache |
+| @CachePut | Updates cache with new value |
+| @EnableCaching | Enables caching in Spring Boot |
+
+
+### ✅ Spring Boot Caching (Simple Guide)
+---
+
+### 🔹 What is Caching?
+Caching stores method results so the same call can return faster without hitting the database or recomputing.
+
+---
+
+### 🔹 1. **Enable Caching**
+Add this to your main class:
+
+```java
+@SpringBootApplication
+@EnableCaching
+public class MyApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(MyApplication.class, args);
+    }
+}
+```
+---
+
+### 🔹 2. **Add Cache to a Method**
+```java
+@Service
+public class ProductService {
+
+    @Cacheable("products")
+    public Product getProductById(Long id) {
+        simulateSlowService();  // simulates DB call
+        return productRepository.findById(id).orElse(null);
+    }
+}
+```
+🧠 **How it works**:
+
+- On first call, method executes and result is cached.
+- On next calls with same `id` , result is returned from cache.
+---
+
+### 🔹 3. **Evict or Update Cache**
+- **Evict from cache**:
+```java
+@CacheEvict(value = "products", key = "#id")
+public void deleteProduct(Long id) {
+    productRepository.deleteById(id);
+}
+```
+- **Update cache**:
+```java
+@CachePut(value = "products", key = "#product.id")
+public Product updateProduct(Product product) {
+    return productRepository.save(product);
+}
+```
+---
+
+### 🔹 4. **Default Cache (Simple In-Memory)**
+Spring Boot uses **ConcurrentHashMap** as the default cache provider.
+
+No extra config needed.
+
+---
+
+### 🔹 5. **Custom Cache Config (Optional)**
+You can configure cache settings in `application.properties` if using other cache providers (like EhCache, Redis).
+
+---
+
+# Lecture - 31 
+## REDIS
+### ✅ What is Redis?
+**Redis** (REmote DIctionary Server) is an **in-memory data store** used as:
+
+- A **cache**
+- A **database**
+- A **message broker**
+---
+
+### 🔹 Key Features
+| Feature | Description |
+| ----- | ----- |
+| ⚡ In-Memory | Very fast (stores data in RAM) |
+| 🔑 Key-Value Store | Stores data as key-value pairs |
+| ⏱️ TTL Support | Supports auto-expiring keys (useful in caching) |
+| 🔁 Pub/Sub | Supports messaging between services |
+| ♻️ Persistence | Can optionally save data to disk |
+| 🧠 Data Structures | Strings, Lists, Sets, Hashes, Sorted Sets |
+---
+
+### 🔹 Common Use Cases
+- **Spring Boot caching** backend (`@Cacheable`  with Redis)
+- **Session storage** (e.g., for login sessions)
+- **Rate limiting**
+- **Real-time chat and pub/sub**
+- **Leaderboards** (using sorted sets)
+---
+
+### 🔹 Example Redis Entry
+```bash
+SET user:101 "Sneha"
+GET user:101
+```
+---
+
+### 🔹 Spring Boot + Redis
+You can use Redis with Spring Boot like this:
+
+1. Add dependency:
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-data-redis</artifactId>
+</dependency>
+```
+1. Configure in `application.properties` :
+```properties
+spring.cache.type=redis
+spring.redis.host=localhost
+spring.redis.port=6379
+```
+---
+
+---
+
+# Lecture - 32 
+# Scheduling In Spring Boot
+
+
+### What is scheduling?
+- Scheduling in Spring Boot allows you to **automate tasks** at specific intervals or times.
+- It helps in running background jobs without manual intervention.
+#### Why do we need Scheduling?
+- Without scheduling, repetitive tasks must be **triggered manually**.
+
+
+### Use Cases of Scheduling 
+| **Scenario** | How Scheduling Helps |
+| ----- | ----- |
+| **Order Processing ** | Automatically process pending orders every 5 minutes |
+| **Email Notification** | Send promotional emails daily at midnight |
+| **Data Cleanup** | Delete old records every sunday 2 AM |
+| **Stock Update** | Fetch stock prices from APIs every hour |
+| **System Health Chack** | Log system status every minute |
+
+
+### ✅ **Scheduling in Spring Boot – Short Notes**
+Spring Boot provides built-in support for scheduling tasks using the `@Scheduled` annotation.
+
+---
+
+### 🔧 **Enable Scheduling**
+```java
+@SpringBootApplication
+@EnableScheduling
+public class MyApp {
+    public static void main(String[] args) {
+        SpringApplication.run(MyApp.class, args);
+    }
+}
+```
+---
+
+### 🕒 **@Scheduled Annotation**
+Used to schedule tasks to run at specific intervals or times.
+
+#### ✅ **Fixed Rate (in milliseconds)**
+Runs repeatedly with a fixed time between **start** of each execution. 
+
+Overlap can occur.
+
+```java
+@Scheduled(fixedRate = 5000)
+public void runTask() {
+    // runs every 5 seconds
+}
+```
+#### ✅ **Fixed Delay**
+Runs repeatedly with a fixed delay between the **end** of execution and next start. 
+
+No Overlapping (Generally)
+
+```java
+@Scheduled(fixedDelay = 5000)
+public void runTask() {
+    // 5 seconds after last execution finishes
+}
+```
+#### ✅ **Initial Delay**
+Delays first execution.
+
+```java
+@Scheduled(initialDelay = 10000, fixedRate = 5000)
+public void runTask() {
+    // starts after 10 sec, then every 5 sec
+}
+```
+#### ✅ **Cron Expression**
+Schedule based on time and date pattern.
+
+```java
+@Scheduled(cron = "0 0 * * * *") // every hour
+public void runTask() {
+    // uses cron syntax (seconds minutes hours day month weekday)
+}
+```
+---
+
+```
+┌───────────── second (0–59)
+│ ┌───────────── minute (0–59)
+│ │ ┌───────────── hour (0–23)
+│ │ │ ┌───────────── day of month (1–31)
+│ │ │ │ ┌───────────── month (1–12)
+│ │ │ │ │ ┌───────────── day of week (0–6) (Sunday=0)
+│ │ │ │ │ │
+* * * * * *
+```
+
+
+---
+
+| Character | Meaning |
+| ----- | ----- |
+| * | All values (e.g. `* * * * * *` runs every second) |
+| , | Specifies multiple values (e.g. `0,15,30,45, * * * * *` runs at 0, 15, 30 and 45 seconds) |
+| - | <p>Range of values (e.g. `10-20 * * * * *` </p><p> runs form second 10 - 20)</p> |
+| / | Specifies increments(e.g. `*/5 * * * * *`  runs every 5 seconds) |
+| ? | No specific value (used in **day-of-month** or **day-of-week**) |
+| L | Last (e.g. `L` in day-of-month = last day of the month) |
+| W | Nearest weekday (e.g. `15W` = nearest weekday to 15th) |
+| # | nth day of month (e.g. `MON#2` = 2nd Monday of the month) |
+---
+
+### 🔒 **Note:**
+- The method must be `void` , take no arguments.
+- The class should be a `@Component`  or `@Service` .
+---
+
+
+
+
+
+# Lecture - 33
+# Dynamic Scheduling
+
+
+### 🔁 **Dynamic Scheduling in Spring Boot – Short Notes**
+Unlike static scheduling with `@Scheduled`, **dynamic scheduling** allows you to **start, stop, or reschedule tasks at runtime** — useful when the schedule comes from a **database or user input**.
+
+---
+
+### ✅ **Approach Using **`**TaskScheduler**` 
+1. **Inject **`**TaskScheduler**` **:**
+```java
+@Autowired
+private TaskScheduler taskScheduler;
+```
+1. **Schedule a Runnable:**
+```java
+ScheduledFuture<?> future;
+
+public void scheduleTask(Runnable task, long delayInMillis) {
+    future = taskScheduler.scheduleAtFixedRate(task, delayInMillis);
+}
+```
+1. **Cancel the Task Dynamically:**
+```java
+public void cancelTask() {
+    if (future != null) {
+        future.cancel(false);
+    }
+}
+```
+---
+
+### ✅ **Using **`**ThreadPoolTaskScheduler**`** Bean**
+```java
+@Bean
+public TaskScheduler taskScheduler() {
+    return new ThreadPoolTaskScheduler();
+}
+```
+---
+
+### ✅ **Dynamic Cron-Based Scheduling Example**
+```java
+public void scheduleWithCron(String cronExpression) {
+    taskScheduler.schedule(() -> {
+        System.out.println("Dynamic Cron Task: " + LocalDateTime.now());
+    }, new CronTrigger(cronExpression));
+}
+```
+---
+
+### 📌 **Use Case Examples**
+- Schedule emails or notifications based on user settings.
+- Read cron expressions from DB.
+- Start/stop tasks via REST endpoints.
+---
+
+
+
+
+
